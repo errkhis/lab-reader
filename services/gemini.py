@@ -1,5 +1,4 @@
 import os
-import base64
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import HumanMessage
 from dotenv import load_dotenv
@@ -18,24 +17,23 @@ llm = ChatGoogleGenerativeAI(
 async def analyze_lab_file(file_content: bytes, mime_type: str, prompt: str = ""):
     """
     Analyzes a lab file (image or PDF) using Gemini via LangChain.
+    Passes raw bytes directly using the 'media' block to match the native SDK behavior
+    and avoid base64 overhead.
     """
     if not prompt:
         # Default fallback prompt
         prompt = "Explain what this document is about."
 
-    # Encode the binary content to base64 for LangChain's multimodal support
-    base64_data = base64.b64encode(file_content).decode("utf-8")
-    
-    # Construct the message with both text and the file
-    # For Gemini, LangChain supports passing images and PDFs via the image_url block structure
-    # or as direct media parts depending on the specific LangChain version's implementation.
-    # The standard way in LangChain for multimodal is using content blocks.
+    # Construct the message with both text and the raw binary data.
+    # We use the 'media' type block which is supported by langchain-google-genai 2.x/4.x
+    # and maps directly to the underlying Google GenAI SDK's media parts.
     message = HumanMessage(
         content=[
             {"type": "text", "text": prompt},
             {
-                "type": "image_url",
-                "image_url": {"url": f"data:{mime_type};base64,{base64_data}"}
+                "type": "media",
+                "mime_type": mime_type,
+                "data": file_content
             },
         ]
     )
