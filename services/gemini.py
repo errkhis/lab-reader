@@ -13,7 +13,6 @@ llm = ChatGoogleGenerativeAI(
     model=os.getenv("GEMINI_MODEL", "gemini-2.0-flash"),
     google_api_key=os.getenv("GOOGLE_API_KEY"),
     temperature=0,
-    max_output_tokens=800,
 )
 
 async def analyze_lab_file(file_content: bytes, mime_type: str, prompt: str = ""):
