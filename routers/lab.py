@@ -35,6 +35,9 @@ async def validate_file(file: UploadFile = File(...)) -> UploadFile:
             status_code=400, 
             detail=f"File type {mime} not supported. Use PDF, JPEG or PNG."
         )
+    
+    # Update the file's content type to the detected one for downstream services
+    file.content_type = mime
     return file
 
 @router.post("/read-analysis")

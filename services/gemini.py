@@ -17,7 +17,7 @@ async def analyze_lab_file(file_content: bytes, mime_type: str, prompt: str = ""
         # User requested an empty placeholder prompt for now
         prompt = "Explain what this document is about." 
 
-    response = client.models.generate_content(
+    response = await client.aio.models.generate_content(
         model=MODEL_NAME,
         contents=[
             types.Part.from_bytes(
