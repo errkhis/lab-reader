@@ -29,33 +29,47 @@ async def validate_file(file: UploadFile = File(...)) -> UploadFile:
     return file
 
 @router.post("/read-analysis")
-async def read_analysis(file: UploadFile = Depends(validate_file)):
+async def read_analysis(
+    file: UploadFile = Depends(validate_file),
+    language: str = "English"
+):
     content = await file.read()
-    prompt = read_prompt("analysis.txt")
+    base_prompt = read_prompt("analysis.txt")
+    
+    # Append language instruction to the prompt
+    full_prompt = f"{base_prompt}\n\nPlease provide the final results in {language}."
     
     result = await gemini.analyze_lab_file(
         file_content=content,
         mime_type=file.content_type,
-        prompt=prompt
+        prompt=full_prompt
     )
     
     return {
         "filename": file.filename,
+        "language": language,
         "analysis": result
     }
 
 @router.post("/read-medication")
-async def read_medication(file: UploadFile = Depends(validate_file)):
+async def read_medication(
+    file: UploadFile = Depends(validate_file),
+    language: str = "English"
+):
     content = await file.read()
-    prompt = read_prompt("medication.txt")
+    base_prompt = read_prompt("medication.txt")
+    
+    # Append language instruction to the prompt
+    full_prompt = f"{base_prompt}\n\nPlease provide the final results in {language}."
     
     result = await gemini.analyze_lab_file(
         file_content=content,
         mime_type=file.content_type,
-        prompt=prompt
+        prompt=full_prompt
     )
     
     return {
         "filename": file.filename,
+        "language": language,
         "analysis": result
     }
