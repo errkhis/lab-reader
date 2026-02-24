@@ -1,5 +1,8 @@
 from fastapi import FastAPI
 from routers import lab
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = FastAPI(
     title="Lab Reader API",
