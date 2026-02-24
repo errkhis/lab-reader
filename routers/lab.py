@@ -54,8 +54,8 @@ async def read_analysis(
         kind = filetype.guess(content)
         mime_type = kind.mime if kind else file.content_type
         
-        # Append language instruction to the prompt
-        full_prompt = f"{base_prompt}\n\nPlease provide the final results in {language}."
+        # Append language instruction compactly
+        full_prompt = f"{base_prompt}\nOutput lang: {language}."
         
         result = await gemini.analyze_lab_file(
             file_content=content,
@@ -63,6 +63,11 @@ async def read_analysis(
             prompt=full_prompt
         )
         
+        # Save tokens: add disclaimer locally instead of having LLM generate it
+        disclaimer = "\n\n_Disclaimer: AI interpreting for education. Consult a doctor._"
+        if not result.startswith("⚠️"):  # Don't add to errors
+            result += disclaimer
+
         return {
             "filename": file.filename,
             "language": language,
@@ -85,8 +90,8 @@ async def read_medication(
         kind = filetype.guess(content)
         mime_type = kind.mime if kind else file.content_type
         
-        # Append language instruction to the prompt
-        full_prompt = f"{base_prompt}\n\nPlease provide the final results in {language}."
+        # Append language instruction compactly
+        full_prompt = f"{base_prompt}\nOutput lang: {language}."
         
         result = await gemini.analyze_lab_file(
             file_content=content,
@@ -94,6 +99,10 @@ async def read_medication(
             prompt=full_prompt
         )
         
+        disclaimer = "\n\n_Disclaimer: Educational only. Follow doctor instructions._"
+        if not result.startswith("⚠️"):
+            result += disclaimer
+
         return {
             "filename": file.filename,
             "language": language,
@@ -116,8 +125,8 @@ async def read_prescription(
         kind = filetype.guess(content)
         mime_type = kind.mime if kind else file.content_type
         
-        # Append language instruction to the prompt
-        full_prompt = f"{base_prompt}\n\nPlease provide the final results in {language}."
+        # Append language instruction compactly
+        full_prompt = f"{base_prompt}\nOutput lang: {language}."
         
         result = await gemini.analyze_lab_file(
             file_content=content,
@@ -125,6 +134,10 @@ async def read_prescription(
             prompt=full_prompt
         )
         
+        disclaimer = "\n\n_Disclaimer: AI transcription. Confirm with pharmacist._"
+        if not result.startswith("⚠️"):
+            result += disclaimer
+
         return {
             "filename": file.filename,
             "language": language,

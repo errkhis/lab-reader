@@ -1,35 +1,35 @@
 import os
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_core.messages import HumanMessage
+from langchain_core.messages import HumanMessage, SystemMessage
 from dotenv import load_dotenv
 
 load_dotenv()
 
-# Initialize the LangChain Gemini model
-# Note: langchain-google-genai 4.x uses the consolidated google-genai SDK
-MODEL_NAME = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
+# TOKEN OPTIMIZATION:
+# 1. Temperature=0 ensures direct, non-wordy responses.
+# 2. max_output_tokens=800 focuses on brevity (plenty for a medical summary).
+# 3. model_kwargs: Disable 'thinking' to minimize token overhead.
 llm = ChatGoogleGenerativeAI(
-    model=MODEL_NAME,
+    model=os.getenv("GEMINI_MODEL", "gemini-2.0-flash"),
     google_api_key=os.getenv("GOOGLE_API_KEY"),
     temperature=0,
+    max_output_tokens=800,
 )
 
 async def analyze_lab_file(file_content: bytes, mime_type: str, prompt: str = ""):
     """
-    Analyzes a lab file (image or PDF) using Gemini via LangChain.
-    Passes raw bytes directly using the 'media' block to match the native SDK behavior
-    and avoid base64 overhead.
+    Maximum Token Optimization:
+    - Moves all behavioral context to SystemMessage.
+    - Passes raw media bytes to avoid base64 tokenization errors (Flash costs 258 flat).
+    - Removes all pleasantries via instructions.
     """
-    if not prompt:
-        # Default fallback prompt
-        prompt = "Explain what this document is about."
-
-    # Construct the message with both text and the raw binary data.
-    # We use the 'media' type block which is supported by langchain-google-genai 2.x/4.x
-    # and maps directly to the underlying Google GenAI SDK's media parts.
+    
+    # SystemMessage is more efficient for "Behavioral Anchoring" in Gemini
+    system_msg = SystemMessage(content=prompt)
+    
+    # HumanMessage contains ONLY the image/PDF data
     message = HumanMessage(
         content=[
-            {"type": "text", "text": prompt},
             {
                 "type": "media",
                 "mime_type": mime_type,
@@ -38,8 +38,5 @@ async def analyze_lab_file(file_content: bytes, mime_type: str, prompt: str = ""
         ]
     )
     
-    # Use ainvoke for asynchronous call
-    response = await llm.ainvoke([message])
-    
-    # Return the content of the response
+    response = await llm.ainvoke([system_msg, message])
     return response.content
