@@ -1,7 +1,10 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
 from pathlib import Path
 import filetype
+import logging
 from services import gemini
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(
     prefix="/lab",
@@ -45,43 +48,51 @@ async def read_analysis(
     file: UploadFile = Depends(validate_file),
     language: str = "English"
 ):
-    content = await file.read()
-    base_prompt = read_prompt("analysis.txt")
-    
-    # Append language instruction to the prompt
-    full_prompt = f"{base_prompt}\n\nPlease provide the final results in {language}."
-    
-    result = await gemini.analyze_lab_file(
-        file_content=content,
-        mime_type=file.content_type,
-        prompt=full_prompt
-    )
-    
-    return {
-        "filename": file.filename,
-        "language": language,
-        "analysis": result
-    }
+    try:
+        content = await file.read()
+        base_prompt = read_prompt("analysis.txt")
+        
+        # Append language instruction to the prompt
+        full_prompt = f"{base_prompt}\n\nPlease provide the final results in {language}."
+        
+        result = await gemini.analyze_lab_file(
+            file_content=content,
+            mime_type=file.content_type,
+            prompt=full_prompt
+        )
+        
+        return {
+            "filename": file.filename,
+            "language": language,
+            "analysis": result
+        }
+    except Exception as e:
+        logger.error(f"Error in read_analysis: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/read-medication")
 async def read_medication(
     file: UploadFile = Depends(validate_file),
     language: str = "English"
 ):
-    content = await file.read()
-    base_prompt = read_prompt("medication.txt")
-    
-    # Append language instruction to the prompt
-    full_prompt = f"{base_prompt}\n\nPlease provide the final results in {language}."
-    
-    result = await gemini.analyze_lab_file(
-        file_content=content,
-        mime_type=file.content_type,
-        prompt=full_prompt
-    )
-    
-    return {
-        "filename": file.filename,
-        "language": language,
-        "analysis": result
-    }
+    try:
+        content = await file.read()
+        base_prompt = read_prompt("medication.txt")
+        
+        # Append language instruction to the prompt
+        full_prompt = f"{base_prompt}\n\nPlease provide the final results in {language}."
+        
+        result = await gemini.analyze_lab_file(
+            file_content=content,
+            mime_type=file.content_type,
+            prompt=full_prompt
+        )
+        
+        return {
+            "filename": file.filename,
+            "language": language,
+            "analysis": result
+        }
+    except Exception as e:
+        logger.error(f"Error in read_medication: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
