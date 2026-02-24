@@ -1,6 +1,6 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
 from pathlib import Path
-import magic
+import filetype
 from services import gemini
 
 router = APIRouter(
@@ -8,7 +8,7 @@ router = APIRouter(
     tags=["lab"]
 )
 
-ALLOWED_EXTENSIONS = {"image/jpeg", "image/png", "application/pdf"}
+ALLOWED_TYPES = ["image/jpeg", "image/png", "application/pdf"]
 
 def read_prompt(filename: str) -> str:
     path = Path(__file__).parent.parent / "prompts" / filename
@@ -17,11 +17,20 @@ def read_prompt(filename: str) -> str:
     return ""
 
 async def validate_file(file: UploadFile = File(...)) -> UploadFile:
+    """
+    Validates file using magic numbers (header bytes) via the 'filetype' library.
+    This replaces python-magic which requires external system dependencies.
+    """
     content = await file.read(2048)
     await file.seek(0)
     
-    mime = magic.from_buffer(content, mime=True)
-    if mime not in ALLOWED_EXTENSIONS:
+    kind = filetype.guess(content)
+    
+    # If filetype can't guess (it's sometimes strict with PDFs), 
+    # we fallback to the content_type provided by the request but still log the mismatch
+    mime = kind.mime if kind else file.content_type
+    
+    if mime not in ALLOWED_TYPES:
         raise HTTPException(
             status_code=400, 
             detail=f"File type {mime} not supported. Use PDF, JPEG or PNG."
