@@ -1,0 +1,129 @@
+{
+    "info": {
+        "_postman_id": "8a7c1b5e-99f1-4b7e-9624-b6e94758a422",
+        "name": "Lab Reader API",
+        "description": "Postman collection for the Lab Reader API",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "General",
+            "item": [
+                {
+                    "name": "Root",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                ""
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Health Check",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/health",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "health"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Lab",
+            "item": [
+                {
+                    "name": "Read Analysis",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "file",
+                                    "type": "file",
+                                    "src": []
+                                },
+                                {
+                                    "key": "language",
+                                    "value": "English",
+                                    "type": "text"
+                                }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/lab/read-analysis",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "lab",
+                                "read-analysis"
+                            ]
+                        },
+                        "description": "Upload a lab analysis file (PDF, JPEG, or PNG) to get an AI analysis."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Read Medication",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "file",
+                                    "type": "file",
+                                    "src": []
+                                },
+                                {
+                                    "key": "language",
+                                    "value": "English",
+                                    "type": "text"
+                                }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/lab/read-medication",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "lab",
+                                "read-medication"
+                            ]
+                        },
+                        "description": "Upload a medication document (PDF, JPEG, or PNG) to get an AI analysis."
+                    },
+                    "response": []
+                }
+            ]
+        }
+    ],
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "http://localhost:8000",
+            "type": "string"
+        }
+    ]
+}
