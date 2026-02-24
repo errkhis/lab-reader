@@ -11,6 +11,14 @@ router = APIRouter(
     tags=["lab"]
 )
 
+# Localized Disclaimers for token optimization (added in code)
+DISCLAIMERS = {
+    "Arabic": "\n\n_تنبيه: هذا التحليل آلي وبغرض التثقيف فقط. يرجى استشارة طبيبك._",
+    "Spanish": "\n\n_Aviso: Este es un análisis automático con fines educativos. Consulte a su médico._",
+    "French": "\n\n_Avis : Il s'agit d'une analyse automatique à des fins éducatives. Consultez votre médecin._",
+    "English": "\n\n_Disclaimer: AI interpretation for education. Consult a doctor._"
+}
+
 ALLOWED_TYPES = ["image/jpeg", "image/png", "application/pdf"]
 
 def read_prompt(filename: str) -> str:
@@ -54,8 +62,8 @@ async def read_analysis(
         kind = filetype.guess(content)
         mime_type = kind.mime if kind else file.content_type
         
-        # Append language instruction compactly
-        full_prompt = f"{base_prompt}\nOutput lang: {language}."
+        # Language instruction: ensure EVERYTHING is translated
+        full_prompt = f"{base_prompt}\nTranslate everything (including headers) to: {language}."
         
         result = await gemini.analyze_lab_file(
             file_content=content,
@@ -63,9 +71,9 @@ async def read_analysis(
             prompt=full_prompt
         )
         
-        # Save tokens: add disclaimer locally instead of having LLM generate it
-        disclaimer = "\n\n_Disclaimer: AI interpreting for education. Consult a doctor._"
-        if not result.startswith("⚠️"):  # Don't add to errors
+        # Add localized disclaimer
+        disclaimer = DISCLAIMERS.get(language, DISCLAIMERS["English"])
+        if not result.startswith("⚠️"):
             result += disclaimer
 
         return {
@@ -90,8 +98,8 @@ async def read_medication(
         kind = filetype.guess(content)
         mime_type = kind.mime if kind else file.content_type
         
-        # Append language instruction compactly
-        full_prompt = f"{base_prompt}\nOutput lang: {language}."
+        # Language instruction: ensure EVERYTHING is translated
+        full_prompt = f"{base_prompt}\nTranslate everything (including headers) to: {language}."
         
         result = await gemini.analyze_lab_file(
             file_content=content,
@@ -99,7 +107,7 @@ async def read_medication(
             prompt=full_prompt
         )
         
-        disclaimer = "\n\n_Disclaimer: Educational only. Follow doctor instructions._"
+        disclaimer = DISCLAIMERS.get(language, DISCLAIMERS["English"])
         if not result.startswith("⚠️"):
             result += disclaimer
 
@@ -125,8 +133,8 @@ async def read_prescription(
         kind = filetype.guess(content)
         mime_type = kind.mime if kind else file.content_type
         
-        # Append language instruction compactly
-        full_prompt = f"{base_prompt}\nOutput lang: {language}."
+        # Language instruction: ensure EVERYTHING is translated
+        full_prompt = f"{base_prompt}\nTranslate everything (including headers) to: {language}."
         
         result = await gemini.analyze_lab_file(
             file_content=content,
@@ -134,7 +142,7 @@ async def read_prescription(
             prompt=full_prompt
         )
         
-        disclaimer = "\n\n_Disclaimer: AI transcription. Confirm with pharmacist._"
+        disclaimer = DISCLAIMERS.get(language, DISCLAIMERS["English"])
         if not result.startswith("⚠️"):
             result += disclaimer
 
