@@ -102,3 +102,34 @@ async def read_medication(
     except Exception as e:
         logger.error(f"Error in read_medication: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/read-prescription")
+async def read_prescription(
+    file: UploadFile = Depends(validate_file),
+    language: str = "English"
+):
+    try:
+        content = await file.read()
+        base_prompt = read_prompt("prescription.txt")
+        
+        # Detect MIME type from content to ensure accuracy for Gemini
+        kind = filetype.guess(content)
+        mime_type = kind.mime if kind else file.content_type
+        
+        # Append language instruction to the prompt
+        full_prompt = f"{base_prompt}\n\nPlease provide the final results in {language}."
+        
+        result = await gemini.analyze_lab_file(
+            file_content=content,
+            mime_type=mime_type,
+            prompt=full_prompt
+        )
+        
+        return {
+            "filename": file.filename,
+            "language": language,
+            "analysis": result
+        }
+    except Exception as e:
+        logger.error(f"Error in read_prescription: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
