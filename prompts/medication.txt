@@ -1,0 +1,1 @@
+Please identify all medications mentioned in this document, including their names, dosages, and frequency of use.

@@ -1,4 +1,5 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
+from pathlib import Path
 import magic
 from services import gemini
 
@@ -9,12 +10,13 @@ router = APIRouter(
 
 ALLOWED_EXTENSIONS = {"image/jpeg", "image/png", "application/pdf"}
 
+def read_prompt(filename: str) -> str:
+    path = Path(__file__).parent.parent / "prompts" / filename
+    if path.exists():
+        return path.read_text(encoding="utf-8")
+    return ""
+
 async def validate_file(file: UploadFile = File(...)) -> UploadFile:
-    """
-    This function reads the actual bytes to verify the file is what it says it is.
-    Using 'magic' is much safer than just checking the extension.
-    """
-    # Read first 2048 bytes to detect type
     content = await file.read(2048)
     await file.seek(0)
     
@@ -29,10 +31,7 @@ async def validate_file(file: UploadFile = File(...)) -> UploadFile:
 @router.post("/read-analysis")
 async def read_analysis(file: UploadFile = Depends(validate_file)):
     content = await file.read()
-    
-    # Placeholder for analysis specific prompt
-    # Example: "Extract all lab results and highlight anything out of range."
-    prompt = "" 
+    prompt = read_prompt("analysis.txt")
     
     result = await gemini.analyze_lab_file(
         file_content=content,
@@ -48,10 +47,7 @@ async def read_analysis(file: UploadFile = Depends(validate_file)):
 @router.post("/read-medication")
 async def read_medication(file: UploadFile = Depends(validate_file)):
     content = await file.read()
-    
-    # Placeholder for medication specific prompt
-    # Example: "Identify names of medications, dosages, and frequencies."
-    prompt = "" 
+    prompt = read_prompt("medication.txt")
     
     result = await gemini.analyze_lab_file(
         file_content=content,
