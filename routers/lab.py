@@ -39,8 +39,6 @@ async def validate_file(file: UploadFile = File(...)) -> UploadFile:
             detail=f"File type {mime} not supported. Use PDF, JPEG or PNG."
         )
     
-    # Update the file's content type to the detected one for downstream services
-    file.content_type = mime
     return file
 
 @router.post("/read-analysis")
@@ -52,12 +50,16 @@ async def read_analysis(
         content = await file.read()
         base_prompt = read_prompt("analysis.txt")
         
+        # Detect MIME type from content to ensure accuracy for Gemini
+        kind = filetype.guess(content)
+        mime_type = kind.mime if kind else file.content_type
+        
         # Append language instruction to the prompt
         full_prompt = f"{base_prompt}\n\nPlease provide the final results in {language}."
         
         result = await gemini.analyze_lab_file(
             file_content=content,
-            mime_type=file.content_type,
+            mime_type=mime_type,
             prompt=full_prompt
         )
         
@@ -79,12 +81,16 @@ async def read_medication(
         content = await file.read()
         base_prompt = read_prompt("medication.txt")
         
+        # Detect MIME type from content to ensure accuracy for Gemini
+        kind = filetype.guess(content)
+        mime_type = kind.mime if kind else file.content_type
+        
         # Append language instruction to the prompt
         full_prompt = f"{base_prompt}\n\nPlease provide the final results in {language}."
         
         result = await gemini.analyze_lab_file(
             file_content=content,
-            mime_type=file.content_type,
+            mime_type=mime_type,
             prompt=full_prompt
         )
         
