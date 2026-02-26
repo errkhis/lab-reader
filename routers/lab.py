@@ -2,6 +2,9 @@ from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
 from pathlib import Path
 import filetype
 import logging
+import base64
+import io
+from gtts import gTTS
 from services import gemini
 
 logger = logging.getLogger(__name__)
@@ -18,6 +21,28 @@ DISCLAIMERS = {
     "French": "\n\n_Avis : Il s'agit d'une analyse automatique à des fins éducatives. Consultez votre médecin._",
     "English": "\n\n_Disclaimer: AI interpretation for education. Consult a doctor._"
 }
+
+LANG_MAP = {
+    "Arabic": "ar",
+    "Spanish": "es",
+    "French": "fr",
+    "English": "en"
+}
+
+def generate_voice_base64(text: str, language: str) -> str:
+    """Generates a gTTS audio from text and returns it as a base64 string."""
+    try:
+        # Remove markdown before TTS for better audio quality
+        clean_text = text.replace("*", "").replace("_", "").replace("#", "").strip()
+        lang_code = LANG_MAP.get(language, "en")
+        
+        tts = gTTS(text=clean_text, lang=lang_code)
+        fp = io.BytesIO()
+        tts.write_to_fp(fp)
+        return base64.b64encode(fp.getvalue()).decode("utf-8")
+    except Exception as e:
+        logger.error(f"TTS Error: {e}")
+        return ""
 
 ALLOWED_TYPES = ["image/jpeg", "image/png", "application/pdf"]
 
@@ -79,7 +104,8 @@ async def read_analysis(
         return {
             "filename": file.filename,
             "language": language,
-            "analysis": result
+            "analysis": result,
+            "voice": generate_voice_base64(result, language)
         }
     except Exception as e:
         logger.error(f"Error in read_analysis: {str(e)}", exc_info=True)
@@ -114,7 +140,8 @@ async def read_medication(
         return {
             "filename": file.filename,
             "language": language,
-            "analysis": result
+            "analysis": result,
+            "voice": generate_voice_base64(result, language)
         }
     except Exception as e:
         logger.error(f"Error in read_medication: {str(e)}", exc_info=True)
@@ -149,7 +176,8 @@ async def read_prescription(
         return {
             "filename": file.filename,
             "language": language,
-            "analysis": result
+            "analysis": result,
+            "voice": generate_voice_base64(result, language)
         }
     except Exception as e:
         logger.error(f"Error in read_prescription: {str(e)}", exc_info=True)
@@ -184,7 +212,8 @@ async def read_radiography(
         return {
             "filename": file.filename,
             "language": language,
-            "analysis": result
+            "analysis": result,
+            "voice": generate_voice_base64(result, language)
         }
     except Exception as e:
         logger.error(f"Error in read_radiography: {str(e)}", exc_info=True)
