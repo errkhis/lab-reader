@@ -154,3 +154,38 @@ async def read_prescription(
     except Exception as e:
         logger.error(f"Error in read_prescription: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/read-radiography")
+async def read_radiography(
+    file: UploadFile = Depends(validate_file),
+    language: str = "English"
+):
+    try:
+        content = await file.read()
+        base_prompt = read_prompt("radiography.txt")
+        
+        # Detect MIME type from content to ensure accuracy for Gemini
+        kind = filetype.guess(content)
+        mime_type = kind.mime if kind else file.content_type
+        
+        # Language instruction: ensure EVERYTHING is translated
+        full_prompt = f"{base_prompt}\nTranslate everything (including headers) to: {language}."
+        
+        result = await gemini.analyze_lab_file(
+            file_content=content,
+            mime_type=mime_type,
+            prompt=full_prompt
+        )
+        
+        disclaimer = DISCLAIMERS.get(language, DISCLAIMERS["English"])
+        if not result.startswith("⚠️"):
+            result += disclaimer
+
+        return {
+            "filename": file.filename,
+            "language": language,
+            "analysis": result
+        }
+    except Exception as e:
+        logger.error(f"Error in read_radiography: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
