@@ -24,10 +24,10 @@ DISCLAIMERS = {
 }
 
 VOICE_MAP = {
-    "Arabic": "ar-SA-HamedNeural",
-    "Spanish": "es-ES-AlvaroNeural",
-    "French": "fr-FR-HenriNeural",
-    "English": "en-US-GuyNeural"
+    "Arabic": "ar-MA-MounaNeural",
+    "Spanish": "es-ES-ElviraNeural",
+    "French": "fr-FR-DeniseNeural",
+    "English": "en-US-AvaNeural"
 }
 
 async def generate_voice_base64(text: str, language: str) -> str:
