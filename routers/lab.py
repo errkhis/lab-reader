@@ -4,7 +4,8 @@ import filetype
 import logging
 import base64
 import io
-from gtts import gTTS
+import edge_tts
+import emoji
 from services import gemini
 
 logger = logging.getLogger(__name__)
@@ -22,23 +23,29 @@ DISCLAIMERS = {
     "English": "\n\n_Disclaimer: AI interpretation for education. Consult a doctor._"
 }
 
-LANG_MAP = {
-    "Arabic": "ar",
-    "Spanish": "es",
-    "French": "fr",
-    "English": "en"
+VOICE_MAP = {
+    "Arabic": "ar-SA-HamedNeural",
+    "Spanish": "es-ES-AlvaroNeural",
+    "French": "fr-FR-HenriNeural",
+    "English": "en-US-GuyNeural"
 }
 
-def generate_voice_base64(text: str, language: str) -> str:
-    """Generates a gTTS audio from text and returns it as a base64 string."""
+async def generate_voice_base64(text: str, language: str) -> str:
+    """Generates a clean male voice audio from text using edge-tts (strips emojis)."""
     try:
-        # Remove markdown before TTS for better audio quality
-        clean_text = text.replace("*", "").replace("_", "").replace("#", "").strip()
-        lang_code = LANG_MAP.get(language, "en")
+        # Remove emojis
+        clean_text = emoji.replace_emoji(text, replace='')
+        # Remove markdown before TTS
+        clean_text = clean_text.replace("*", "").replace("_", "").replace("#", "").replace("`", "").strip()
         
-        tts = gTTS(text=clean_text, lang=lang_code)
+        voice = VOICE_MAP.get(language, "en-US-GuyNeural")
+        
+        communicate = edge_tts.Communicate(clean_text, voice)
         fp = io.BytesIO()
-        tts.write_to_fp(fp)
+        async for chunk in communicate.stream():
+            if chunk["type"] == "audio":
+                fp.write(chunk["data"])
+                
         return base64.b64encode(fp.getvalue()).decode("utf-8")
     except Exception as e:
         logger.error(f"TTS Error: {e}")
@@ -105,7 +112,7 @@ async def read_analysis(
             "filename": file.filename,
             "language": language,
             "analysis": result,
-            "voice": generate_voice_base64(result, language)
+            "voice": await generate_voice_base64(result, language)
         }
     except Exception as e:
         logger.error(f"Error in read_analysis: {str(e)}", exc_info=True)
@@ -141,7 +148,7 @@ async def read_medication(
             "filename": file.filename,
             "language": language,
             "analysis": result,
-            "voice": generate_voice_base64(result, language)
+            "voice": await generate_voice_base64(result, language)
         }
     except Exception as e:
         logger.error(f"Error in read_medication: {str(e)}", exc_info=True)
@@ -177,7 +184,7 @@ async def read_prescription(
             "filename": file.filename,
             "language": language,
             "analysis": result,
-            "voice": generate_voice_base64(result, language)
+            "voice": await generate_voice_base64(result, language)
         }
     except Exception as e:
         logger.error(f"Error in read_prescription: {str(e)}", exc_info=True)
@@ -213,7 +220,7 @@ async def read_radiography(
             "filename": file.filename,
             "language": language,
             "analysis": result,
-            "voice": generate_voice_base64(result, language)
+            "voice": await generate_voice_base64(result, language)
         }
     except Exception as e:
         logger.error(f"Error in read_radiography: {str(e)}", exc_info=True)
