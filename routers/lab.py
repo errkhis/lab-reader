@@ -1,5 +1,8 @@
-from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
+from fastapi import APIRouter, UploadFile, File, HTTPException, Depends, Security, status
+from fastapi.security import APIKeyHeader
 from pathlib import Path
+from anyio import Path as AsyncPath
+import os
 import filetype
 import logging
 import base64
@@ -10,9 +13,23 @@ from services import gemini
 
 logger = logging.getLogger(__name__)
 
+API_KEY_NAME = "X-API-Key"
+api_key_header = APIKeyHeader(name=API_KEY_NAME, auto_error=False)
+
+async def get_api_key(api_key: str = Security(api_key_header)):
+    expected_key = os.getenv("LAB_READER_API_KEY")
+    if api_key == expected_key:
+        return api_key
+    
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="Could not validate API Key"
+    )
+
 router = APIRouter(
     prefix="/lab",
-    tags=["lab"]
+    tags=["lab"],
+    dependencies=[Depends(get_api_key)]
 )
 
 # Localized Disclaimers for token optimization (added in code)
@@ -53,10 +70,10 @@ async def generate_voice_base64(text: str, language: str) -> str:
 
 ALLOWED_TYPES = ["image/jpeg", "image/png", "application/pdf"]
 
-def read_prompt(filename: str) -> str:
-    path = Path(__file__).parent.parent / "prompts" / filename
-    if path.exists():
-        return path.read_text(encoding="utf-8")
+async def read_prompt(filename: str) -> str:
+    path = AsyncPath(__file__).parent.parent / "prompts" / filename
+    if await path.exists():
+        return await path.read_text(encoding="utf-8")
     return ""
 
 async def validate_file(file: UploadFile = File(...)) -> UploadFile:
@@ -88,7 +105,7 @@ async def read_analysis(
 ):
     try:
         content = await file.read()
-        base_prompt = read_prompt("analysis.txt")
+        base_prompt = await read_prompt("analysis.txt")
         
         # Detect MIME type from content to ensure accuracy for Gemini
         kind = filetype.guess(content)
@@ -125,7 +142,7 @@ async def read_medication(
 ):
     try:
         content = await file.read()
-        base_prompt = read_prompt("medication.txt")
+        base_prompt = await read_prompt("medication.txt")
         
         # Detect MIME type from content to ensure accuracy for Gemini
         kind = filetype.guess(content)
@@ -161,7 +178,7 @@ async def read_prescription(
 ):
     try:
         content = await file.read()
-        base_prompt = read_prompt("prescription.txt")
+        base_prompt = await read_prompt("prescription.txt")
         
         # Detect MIME type from content to ensure accuracy for Gemini
         kind = filetype.guess(content)
@@ -197,7 +214,7 @@ async def read_radiography(
 ):
     try:
         content = await file.read()
-        base_prompt = read_prompt("radiography.txt")
+        base_prompt = await read_prompt("radiography.txt")
         
         # Detect MIME type from content to ensure accuracy for Gemini
         kind = filetype.guess(content)
