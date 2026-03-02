@@ -52,7 +52,13 @@
                     "name": "Read Analysis",
                     "request": {
                         "method": "POST",
-                        "header": [],
+                        "header": [
+                            {
+                                "key": "X-API-Key",
+                                "value": "{{api_key}}",
+                                "type": "text"
+                            }
+                        ],
                         "body": {
                             "mode": "formdata",
                             "formdata": [
@@ -86,7 +92,13 @@
                     "name": "Read Medication",
                     "request": {
                         "method": "POST",
-                        "header": [],
+                        "header": [
+                            {
+                                "key": "X-API-Key",
+                                "value": "{{api_key}}",
+                                "type": "text"
+                            }
+                        ],
                         "body": {
                             "mode": "formdata",
                             "formdata": [
@@ -123,6 +135,11 @@
         {
             "key": "base_url",
             "value": "http://localhost:8000",
+            "type": "string"
+        },
+        {
+            "key": "api_key",
+            "value": "your_api_key_here",
             "type": "string"
         }
     ]
