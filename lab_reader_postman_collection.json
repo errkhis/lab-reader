@@ -127,6 +127,86 @@
                         "description": "Upload a medication document (PDF, JPEG, or PNG) to get an AI analysis."
                     },
                     "response": []
+                },
+                {
+                    "name": "Read Prescription",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "X-API-Key",
+                                "value": "{{api_key}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "file",
+                                    "type": "file",
+                                    "src": []
+                                },
+                                {
+                                    "key": "language",
+                                    "value": "English",
+                                    "type": "text"
+                                }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/lab/read-prescription",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "lab",
+                                "read-prescription"
+                            ]
+                        },
+                        "description": "Upload a prescription document (PDF, JPEG, or PNG) to get an AI analysis."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Read Radiography",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "X-API-Key",
+                                "value": "{{api_key}}",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "file",
+                                    "type": "file",
+                                    "src": []
+                                },
+                                {
+                                    "key": "language",
+                                    "value": "English",
+                                    "type": "text"
+                                }
+                            ]
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/lab/read-radiography",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "lab",
+                                "read-radiography"
+                            ]
+                        },
+                        "description": "Upload a radiography image (PDF, JPEG, or PNG) to get an AI analysis."
+                    },
+                    "response": []
                 }
             ]
         }
